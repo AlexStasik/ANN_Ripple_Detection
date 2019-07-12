@@ -49,10 +49,10 @@ def generate_model_CNN(input_shape, padding='same'):
     flatten_layer = keras.layers.Flatten()(conv3)
     flatten_layer = keras.layers.BatchNormalization()(flatten_layer)
 
-    full_conencted1 = keras.layers.Dense(100)(flatten_layer)
+    full_conencted1 = keras.layers.Dense(50)(flatten_layer)
     full_conencted1 = keras.layers.BatchNormalization()(full_conencted1)
-    
-    full_conencted2 = keras.layers.Dense(100)(full_conencted1)
+
+    full_conencted2 = keras.layers.Dense(50)(full_conencted1)
 
     output_layer = keras.layers.Dense(units=2,activation='softmax')(full_conencted2)
 

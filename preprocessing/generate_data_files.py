@@ -3,6 +3,7 @@ import numpy as np
 import scipy
 import os
 import warnings
+import pandas as pd
 
 from ripple_detection import Karlsson_ripple_detector, Kay_ripple_detector
 from ripple_detection.simulate import simulate_time
@@ -24,8 +25,6 @@ def generate_data_set_for_animal(data, animal, sf=2.5e3, q=1):
 
     time = simulate_time(lfp.shape[0], sf)
     ripple_times = time[ripple_index]
-
-    # lfp = scipy.signal.decimate(lfp.flatten(), q)
     lfp = lfp.flatten()
 
     def perform_high_pass_filter(lfp, low_cut_frequency, high_cut_frequency, sf):
@@ -45,40 +44,29 @@ def generate_data_set_for_animal(data, animal, sf=2.5e3, q=1):
         ripple_time_index_sparse.append(np.argmin(np.abs(t-time)))
 
 
-    Kay_ripple_times = Kay_ripple_detector(time, lfp, speed.flatten(), sf/q)
-    label = np.zeros_like(time)
-    label_all = np.zeros_like(time)
-    ripple_index = list()
-    ripple_index_all = list()
+    ripples = Kay_ripple_detector(time, lfp, speed.flatten(), sf/q)
 
+    ripples['duration'] = ripples.loc[:,'end_time'] - ripples.loc[:,'start_time']
+    ripples['start_index'] = ripples.apply(lambda row: int(np.argwhere(time==(row['start_time']))), axis=1)
+    ripples['end_index'] = ripples.apply(lambda row: int(np.argwhere(time==(row['end_time']))), axis=1)
+    ripples['duration_index'] = ripples.apply(lambda row: row['end_index']-row['start_index'], axis=1)
 
+    ripples['speed'] = ripples.apply(lambda row: speed[int(row['start_index']):int(row['end_index'])], axis=1)
+    ripples['lfp'] = ripples.apply(lambda row: lfp[int(row['start_index']):int(row['end_index']),:], axis=1)
+    ripples['time'] = ripples.apply(lambda row: time[int(row['start_index']):int(row['end_index'])], axis=1)
 
-    true_array = np.zeros_like(time)
-    true_array[np.array(ripple_time_index_sparse)] = 1
-    for i in range(Kay_ripple_times.shape[0]):
-        start_index = int(np.argwhere(time==np.array(Kay_ripple_times)[i,0]))
-        end_index = int(np.argwhere(time==np.array(Kay_ripple_times)[i,1]))
-        if (speed[start_index:end_index]).sum()<1:
-            label_all[start_index:end_index] = 1
-            ripple_index_all.append([start_index, end_index])
-            if (true_array[start_index:end_index]).sum()>0:
-                label[start_index:end_index] = 1
-                ripple_index.append([start_index, end_index])
+    end_time = np.array(ripples.end_time)
+    start_time = np.array(ripples.start_time)
+    assert end_time.shape==start_time.shape
+    n_ripples = end_time.shape[0]
+    label = np.zeros(n_ripples)
+    for i in range(n_ripples):
+        for j in range(ripple_times.shape[0]):
+            if np.logical_and(start_time[i]<=ripple_times[j], ripple_times[j]<=end_time[i]):
+                label[i] = 1
+    ripples['labels'] = label
 
-    res = dict()
-    res['sf'] = sf/q
-    res['X'] = lfp
-    res['y'] = label
-    res['y2'] = label_all
-    res['speed'] = speed
-    res['time'] = time
-    res['ripple_times'] = ripple_times
-    res['ripple_time_index'] = np.array(ripple_time_index_sparse)
-    res['ripple_periods'] = np.array(Kay_ripple_times)
-    res['ripple_index'] = np.array(ripple_index)
-    res['true_array'] = np.array(true_array)
-
-    return res
+    return ripples
 
 def generate_all_outputs(data_path='../data/m4000series_LFP_ripple.mat'):
     data = sio.loadmat(data_path)
@@ -90,15 +78,18 @@ def generate_all_outputs(data_path='../data/m4000series_LFP_ripple.mat'):
             if not os.path.exists(directory):
                 os.makedirs(directory)
             res = generate_data_set_for_animal(data, key, )
-            np.save(os.path.join(directory, 'all.npy'), res)
-            np.save(os.path.join(directory, 'X.npy'), res['X'])
-            np.save(os.path.join(directory, 'y.npy'), res['y'])
-            np.save(os.path.join(directory, 'y2.npy'), res['y2'])
-            np.save(os.path.join(directory, 'true_array.npy'), res['true_array'])
-            np.save(os.path.join(directory, 'speed.npy'), res['speed'])
-            np.save(os.path.join(directory, 'time.npy'), res['time'])
-            np.save(os.path.join(directory, 'ripple_periods.npy'), res['ripple_periods'])
-            np.save(os.path.join(directory, 'ripple_times.npy'), res['ripple_times'])
+            print(type(res))
+            res.to_csv(os.path.join(directory, 'all_data.csv'))
+            # np.save(os.path.join(directory, 'all.npy'), res)
+            # np.save(os.path.join(directory, 'X.npy'), res['X'])
+            # np.save(os.path.join(directory, 'y.npy'), res['y'])
+            # np.save(os.path.join(directory, 'y_2.npy'), res['y_2'])
+            # np.save(os.path.join(directory, 'y_all.npy'), res['y_all'])
+            # np.save(os.path.join(directory, 'true_array.npy'), res['true_array'])
+            # np.save(os.path.join(directory, 'speed.npy'), res['speed'])
+            # np.save(os.path.join(directory, 'time.npy'), res['time'])
+            # np.save(os.path.join(directory, 'ripple_periods.npy'), res['ripple_periods'])
+            # np.save(os.path.join(directory, 'ripple_times.npy'), res['ripple_times'])
 
     return res
 
