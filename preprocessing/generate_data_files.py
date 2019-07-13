@@ -21,7 +21,7 @@ def read_out_arrays(data):
     return lfp[:min_val,:], run_speed[:min_val,:], ripple_loc
 
 
-def generate_data_set_for_animal(data, animal, sf=2.5e3, q=2, length=200):
+def generate_data_set_for_animal(data, animal, sf=2.5e3, q=1, length=150):
     lfp, speed, ripple_index = read_out_arrays(data[animal])
 
     time = simulate_time(lfp.shape[0], sf)
@@ -34,7 +34,7 @@ def generate_data_set_for_animal(data, animal, sf=2.5e3, q=2, length=200):
             lfp = signal.filtfilt(b, a, lfp)
             return lfp
 
-    lfp = perform_high_pass_filter(lfp, 1, 500, sf)
+    # lfp = perform_high_pass_filter(lfp, 1, 2500, sf)
     lfp = scipy.signal.decimate(lfp.flatten(), q)
 
     lfp = lfp[:, np.newaxis]
