@@ -4,6 +4,7 @@ import scipy
 import os
 import warnings
 import pandas as pd
+import pickle
 
 from ripple_detection import Karlsson_ripple_detector, Kay_ripple_detector
 from ripple_detection.simulate import simulate_time
@@ -20,7 +21,7 @@ def read_out_arrays(data):
     return lfp[:min_val,:], run_speed[:min_val,:], ripple_loc
 
 
-def generate_data_set_for_animal(data, animal, sf=2.5e3, q=1):
+def generate_data_set_for_animal(data, animal, sf=2.5e3, q=2, length=200):
     lfp, speed, ripple_index = read_out_arrays(data[animal])
 
     time = simulate_time(lfp.shape[0], sf)
@@ -34,6 +35,7 @@ def generate_data_set_for_animal(data, animal, sf=2.5e3, q=1):
             return lfp
 
     lfp = perform_high_pass_filter(lfp, 1, 500, sf)
+    lfp = scipy.signal.decimate(lfp.flatten(), q)
 
     lfp = lfp[:, np.newaxis]
     speed = scipy.signal.decimate(speed.flatten(), q)
@@ -47,13 +49,19 @@ def generate_data_set_for_animal(data, animal, sf=2.5e3, q=1):
     ripples = Kay_ripple_detector(time, lfp, speed.flatten(), sf/q)
 
     ripples['duration'] = ripples.loc[:,'end_time'] - ripples.loc[:,'start_time']
+    ripples['center'] = (ripples.loc[:,'end_time'] + ripples.loc[:,'start_time'])/2.
     ripples['start_index'] = ripples.apply(lambda row: int(np.argwhere(time==(row['start_time']))), axis=1)
     ripples['end_index'] = ripples.apply(lambda row: int(np.argwhere(time==(row['end_time']))), axis=1)
+    ripples['center_index'] = ripples.apply(lambda row: int((row['end_index']+row['start_index'])/2), axis=1)
     ripples['duration_index'] = ripples.apply(lambda row: row['end_index']-row['start_index'], axis=1)
 
-    ripples['speed'] = ripples.apply(lambda row: speed[int(row['start_index']):int(row['end_index'])], axis=1)
-    ripples['lfp'] = ripples.apply(lambda row: lfp[int(row['start_index']):int(row['end_index']),:], axis=1)
-    ripples['time'] = ripples.apply(lambda row: time[int(row['start_index']):int(row['end_index'])], axis=1)
+    ripples['speed'] = ripples.apply(lambda row: speed[int(row['center_index']-length):int(row['center_index']+length)], axis=1)
+    ripples['lfp'] = ripples.apply(lambda row: lfp[int(row['center_index']-length):int(row['center_index']+length),:], axis=1)
+    ripples['time'] = ripples.apply(lambda row: time[int(row['center_index']-length):int(row['center_index']+length)], axis=1)
+
+    # ripples['speed'] = ripples.apply(lambda row: speed[int(row['start_index']):int(row['end_index'])], axis=1)
+    # ripples['lfp'] = ripples.apply(lambda row: lfp[int(row['start_index']):int(row['end_index']),:], axis=1)
+    # ripples['time'] = ripples.apply(lambda row: time[int(row['start_index']):int(row['end_index'])], axis=1)
 
     end_time = np.array(ripples.end_time)
     start_time = np.array(ripples.start_time)
@@ -68,6 +76,7 @@ def generate_data_set_for_animal(data, animal, sf=2.5e3, q=1):
 
     return ripples
 
+
 def generate_all_outputs(data_path='../data/m4000series_LFP_ripple.mat'):
     data = sio.loadmat(data_path)
 
@@ -78,18 +87,8 @@ def generate_all_outputs(data_path='../data/m4000series_LFP_ripple.mat'):
             if not os.path.exists(directory):
                 os.makedirs(directory)
             res = generate_data_set_for_animal(data, key, )
-            print(type(res))
             res.to_csv(os.path.join(directory, 'all_data.csv'))
-            # np.save(os.path.join(directory, 'all.npy'), res)
-            # np.save(os.path.join(directory, 'X.npy'), res['X'])
-            # np.save(os.path.join(directory, 'y.npy'), res['y'])
-            # np.save(os.path.join(directory, 'y_2.npy'), res['y_2'])
-            # np.save(os.path.join(directory, 'y_all.npy'), res['y_all'])
-            # np.save(os.path.join(directory, 'true_array.npy'), res['true_array'])
-            # np.save(os.path.join(directory, 'speed.npy'), res['speed'])
-            # np.save(os.path.join(directory, 'time.npy'), res['time'])
-            # np.save(os.path.join(directory, 'ripple_periods.npy'), res['ripple_periods'])
-            # np.save(os.path.join(directory, 'ripple_times.npy'), res['ripple_times'])
+            res.to_pickle(os.path.join(directory, 'all_data.pkl'))
 
     return res
 
