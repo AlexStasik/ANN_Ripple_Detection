@@ -46,7 +46,7 @@ def generate_data_set_for_animal(data, animal, sf=2.5e3, q=1, length=150):
         ripple_time_index_sparse.append(np.argmin(np.abs(t-time)))
 
 
-    ripples = Kay_ripple_detector(time, lfp, speed.flatten(), sf/q)
+    ripples = Kay_ripple_detector(time, lfp, speed.flatten(), sf/q, zscore_threshold=1.,)
 
     ripples['duration'] = ripples.loc[:,'end_time'] - ripples.loc[:,'start_time']
     ripples['center'] = (ripples.loc[:,'end_time'] + ripples.loc[:,'start_time'])/2.
@@ -63,6 +63,7 @@ def generate_data_set_for_animal(data, animal, sf=2.5e3, q=1, length=150):
     # ripples['lfp'] = ripples.apply(lambda row: lfp[int(row['start_index']):int(row['end_index']),:], axis=1)
     # ripples['time'] = ripples.apply(lambda row: time[int(row['start_index']):int(row['end_index'])], axis=1)
 
+
     end_time = np.array(ripples.end_time)
     start_time = np.array(ripples.start_time)
     assert end_time.shape==start_time.shape
@@ -73,6 +74,8 @@ def generate_data_set_for_animal(data, animal, sf=2.5e3, q=1, length=150):
             if np.logical_and(start_time[i]<=ripple_times[j], ripple_times[j]<=end_time[i]):
                 label[i] = 1
     ripples['labels'] = label
+
+    # print(n_ripples, ripple_times.shape[0], label.sum())
 
     return ripples
 

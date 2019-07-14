@@ -31,6 +31,7 @@ def generate_model_LSTM(input_shape, padding='same'):
     inputs = keras.layers.Input(shape=input_shape)
 
     x = keras.layers.LSTM(20, activation='tanh', return_sequences=True)(inputs)
+    x = keras.layers.GaussianNoise(1.5)(x)
     # x = keras.layers.LSTM(100, activation='tanh', return_sequences=True)(x)
     x = keras.layers.LSTM(20, activation='tanh', return_sequences=False)(x)
 
@@ -51,26 +52,26 @@ def generate_model_CNN(input_shape, padding='same'):
     keras.backend.clear_session()
 
     input_layer = keras.layers.Input(shape=input_shape)
-
+    # noise_output = keras.layers.GaussianNoise(1.5)(input_layer)
 
     conv1 = keras.layers.Conv1D(filters=10,kernel_size=7,padding=padding,
                                 activation='relu')(input_layer)
     conv1 = keras.layers.AveragePooling1D(pool_size=2)(conv1)
     conv1 = keras.layers.BatchNormalization()(conv1)
-    conv1 = keras.layers.GaussianNoise(1.)(conv1)
+    conv1 = keras.layers.GaussianNoise(1.5)(conv1)
 
 
     conv2 = keras.layers.Conv1D(filters=10,kernel_size=7,padding=padding,
                                 activation='relu')(conv1)
     conv2 = keras.layers.AveragePooling1D(pool_size=2)(conv2)
     conv2 = keras.layers.BatchNormalization()(conv2)
-    conv2 = keras.layers.GaussianNoise(1.)(conv2)
+    conv2 = keras.layers.GaussianNoise(1.5)(conv2)
 
     conv3 = keras.layers.Conv1D(filters=10,kernel_size=7,padding=padding,
                                 activation='relu')(conv2)
     conv3 = keras.layers.AveragePooling1D(pool_size=2)(conv3)
     conv3 = keras.layers.BatchNormalization()(conv3)
-    conv3 = keras.layers.GaussianNoise(1.)(conv3)
+    conv3 = keras.layers.GaussianNoise(1.5)(conv3)
 
     flatten_layer = keras.layers.Flatten()(conv3)
     flatten_layer = keras.layers.BatchNormalization()(flatten_layer)
@@ -78,7 +79,7 @@ def generate_model_CNN(input_shape, padding='same'):
     full_conencted1 = keras.layers.Dense(50)(flatten_layer)
     full_conencted1 = keras.layers.BatchNormalization()(full_conencted1)
 
-    # full_conencted2 = keras.layers.Dense(50)(full_conencted1)
+    full_conencted2 = keras.layers.Dense(50)(full_conencted1)
 
     output_layer = keras.layers.Dense(units=2,activation='softmax')(full_conencted1)
 
