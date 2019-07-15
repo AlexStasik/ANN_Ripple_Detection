@@ -75,7 +75,7 @@ def generate_data_set_for_animal(data, animal, sf=2.5e3, q=1, length=150):
                 label[i] = 1
     ripples['labels'] = label
 
-    # print(n_ripples, ripple_times.shape[0], label.sum())
+    print(n_ripples, ripple_times.shape[0], label.sum())
 
     return ripples
 
