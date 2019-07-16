@@ -5,6 +5,7 @@ import os
 import warnings
 import pandas as pd
 import pickle
+import glob
 
 from ripple_detection import Karlsson_ripple_detector, Kay_ripple_detector
 from ripple_detection.simulate import simulate_time
@@ -96,5 +97,45 @@ def generate_all_outputs(data_path='../data/m4000series_LFP_ripple.mat'):
     return res
 
 
+def merge_data_files():
+    pathes = glob.glob(os.path.join('..', 'data', 'processed_data','*'))
+    frames = list()
+
+    for path in pathes:
+        file_path =os.path.join(path, 'all_data.pkl')
+        frames.append(pd.read_pickle(file_path))
+
+    ripples = pd.concat(frames, ignore_index=True)
+    length = [len(frame) for frame in frames]
+
+    max_duration = ripples.loc[0,'time'].shape[0]
+
+    #Centering
+    ripples['lfp'] = ripples.apply(lambda row: row['lfp']-row['lfp'].mean(), axis=1)
+
+    X = np.zeros((len(ripples), int(max_duration), 1))
+    y = np.zeros((len(ripples)))
+    lfp = np.array(ripples.lfp)
+    labels = np.array(ripples.labels)
+    for i in range(len(lfp)):
+        duration = lfp[i].shape[0]
+        X[i,:duration,:] = lfp[i][:duration,:]
+        y[i] = labels[i]
+
+    directory = os.path.join('..', 'data', 'final_data')
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+
+    length_cum = np.cumsum(length)
+    np.save(os.path.join(directory, 'X_train.npy'), X[:length_cum[3],:, :])
+    np.save(os.path.join(directory, 'y_train.npy'), y[:length_cum[3]])
+    np.save(os.path.join(directory, 'X_test.npy'), X[length_cum[3]:,:, :])
+    np.save(os.path.join(directory, 'y_test.npy'), y[length_cum[3]:])
+    np.save(os.path.join(directory, 'X.npy'), X)
+    np.save(os.path.join(directory, 'y.npy'), y)
+
+
+
 if __name__ == '__main__':
     res = generate_all_outputs(data_path='../data/m4000series_LFP_ripple.mat')
+    merge_data_files()
