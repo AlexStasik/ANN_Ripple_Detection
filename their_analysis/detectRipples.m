@@ -46,7 +46,7 @@ for g = 1:nSnips
     
     % Thresholds for ripple detection 
     U_threshold = 3;  % in standard deviations
-    %L_threshold = 1; % in standard deviations
+%     L_threshold = 1; % in standard deviations
     
     % Create filter and apply to LFP data
     filter_kernel = fir1(600,[freqL freqU]./nyquistFs); % Different filters can also be tested her e.g. butter and firls
@@ -59,7 +59,7 @@ for g = 1:nSnips
 
     % Smooth envelop using code from 
     % https://se.mathworks.com/matlabcentral/fileexchange/43182-gaussian-smoothing-filter?focused=3839183&tab=function 
-    smoothed_envelop = gaussfilt(time,lfp_envelop,.004);
+    smoothed_envelop = gaussfilt_2017(time,lfp_envelop,.004);
 
     % Find upper/lower threshold values of the LFP
     upper_thresh=mean(smoothed_envelop)*ones(1,length(lfpSnip))+U_threshold*std(smoothed_envelop);
@@ -96,12 +96,12 @@ end
 %waveform)
 rippleSnips(isnan(rippleIdx)) = [];
 rippleIdx(isnan(rippleIdx)) = [];
-timeBetweenRipples = diff(rippleIdx);
-%must have at least 100 ms between ripples, if there are 2 close together,
-%keep the later one
-extraRipples = find(timeBetweenRipples < 250);
-rippleIdx(extraRipples + 1) = [];
-rippleSnips(extraRipples + 1) = [];
+% timeBetweenRipples = diff(rippleIdx);
+% %must have at least 100 ms between ripples, if there are 2 close together,
+% %keep the later one
+% extraRipples = find(timeBetweenRipples < 250);
+% rippleIdx(extraRipples + 1) = [];
+% rippleSnips(extraRipples + 1) = [];
 
 
 
