@@ -5,6 +5,7 @@ clc
 %%
 addpath(genpath('/Users/astasik/Desktop/current_projects/ANN_Ripple_Detection/their_analysis/gaussfilt'));
 data = open('../data/m4000series_LFP_ripple.mat');
+data = open('../data/reprocessed_data/rippleData_m4000Series_New/m4000Series_m4028.mat');
 animals = fieldnames(data);
 
 %%
