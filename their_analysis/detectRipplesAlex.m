@@ -97,6 +97,8 @@ end
 %remove NaNs and timepoints too close together (likely identifying the same ripple
 %waveform)
 rippleSnips(isnan(rippleIdx)) = [];
+w(isnan(rippleIdx)) = [];
+rippleLocs(isnan(rippleIdx)) = [];
 rippleIdx(isnan(rippleIdx)) = [];
 % timeBetweenRipples = diff(rippleIdx);
 % %must have at least 100 ms between ripples, if there are 2 close together,
