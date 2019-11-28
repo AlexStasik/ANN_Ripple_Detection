@@ -1,4 +1,4 @@
-function [rippleIdx, rippleSnips] = detectRipplesAlex(freqFilter,lfpSignal,runSignal,fs)
+function [rippleIdx, rippleSnips, rippleLocs, w] = detectRipplesAlex(freqFilter, lfpSignal, runSignal, fs)
 
 %detectRipples is used to automatically detect peaks in the ripple
 %frequency and extract indices of these peaks so that snippets of the LFP
@@ -68,7 +68,7 @@ upper_thresh = moving_mean + U_threshold*moving_std;
 
 % Find peaks of envelop. NB: The parameters of this function have to be properly
 % chosen for best result.
-[~,locs,~,~] = findpeaks(smoothed_envelop-upper_thresh,fs,'MinPeakHeight',0,'MinPeakDistance',0.025,'MinPeakWidth',0.015,'WidthReference','halfhprom','Annotate','extents','WidthReference','halfprom');
+[~,locs,w,~] = findpeaks(smoothed_envelop-upper_thresh,fs,'MinPeakHeight',0,'MinPeakDistance',0.025,'MinPeakWidth',0.015,'WidthReference','halfheight','Annotate','extents','WidthReference','halfprom');
 rippleLocs = round(locs,3);    
  
 

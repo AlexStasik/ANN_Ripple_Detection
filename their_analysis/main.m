@@ -21,7 +21,7 @@ for i=1:length(animals)
     true_loc = v.rippleLocs;
     
     time = linspace(0,length(lfp),length(lfp))/(fs);
-    [rippleIdx, rippleSnips] = detectRipplesAlex(freqFilter,lfp,speed,fs);
+    [rippleIdx, rippleSnips, p, w] = detectRipplesAlex(freqFilter,lfp,speed,fs);
        
     
     animals{i}
