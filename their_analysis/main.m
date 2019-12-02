@@ -34,41 +34,41 @@ end
 
 
 %%
+
+rawLFP = lfp;
+lfp = rawLFP;
+
+
+% Filter LFP between 150-250 hz for sharp wave ripple detection
+freqL = freqFilter(1);
+freqU = freqFilter(2);
+nyquistFs = fs/2;
+%min_ripple_width = 0.015; % minimum width of envelop at upper threshold for ripple detection in ms
+    
+% Thresholds for ripple detection 
+U_threshold = 3;  % in standard deviations
+%     L_threshold = 1; % in standard deviations
+    
+% Create filter and apply to LFP data
+filter_kernel = fir1(600,[freqL freqU]./nyquistFs); % Different filters can also be tested her e.g. butter and firls
 % 
-% rawLFP = lfp;
-% lfp = rawLFP;
-% 
-% 
-% % Filter LFP between 150-250 hz for sharp wave ripple detection
-% freqL = freqFilter(1);
-% freqU = freqFilter(2);
-% nyquistFs = fs/2;
-% %min_ripple_width = 0.015; % minimum width of envelop at upper threshold for ripple detection in ms
-%     
-% % Thresholds for ripple detection 
-% U_threshold = 3;  % in standard deviations
-% %     L_threshold = 1; % in standard deviations
-%     
-% % Create filter and apply to LFP data
-% filter_kernel = fir1(600,[freqL freqU]./nyquistFs); % Different filters can also be tested her e.g. butter and firls
-% % 
-% filtered_lfp = filtfilt(filter_kernel,1,lfp); % Filter LFP using the above created filter kernel
-%     
-% % Hilbert transform LFP to calculate envelope
-% lfp_hil_tf = hilbert(filtered_lfp);
-% lfp_envelop = abs(lfp_hil_tf);
-% 
-% % Smooth envelop using code from 
-% % https://se.mathworks.com/matlabcentral/fileexchange/43182-gaussian-smoothing-filter?focused=3839183&tab=function 
-% smoothed_envelop = gaussfilt_2017(time,lfp_envelop,.004);
-% moving_mean = movmean(smoothed_envelop, 5000);
-% moving_std = movstd(smoothed_envelop, 5000);
-%     
-%     
-% upper_thresh = moving_mean + U_threshold*moving_std;
-%     
-% [~,locs,w,~] = findpeaks(smoothed_envelop-upper_thresh,fs,'MinPeakHeight',0,'MinPeakDistance',0.025,'MinPeakWidth',0.015,'WidthReference','halfhprom','Annotate','extents','WidthReference','halfprom');
-% locs = round(locs,3);
+filtered_lfp = filtfilt(filter_kernel,1,lfp); % Filter LFP using the above created filter kernel
+    
+% Hilbert transform LFP to calculate envelope
+lfp_hil_tf = hilbert(filtered_lfp);
+lfp_envelop = abs(lfp_hil_tf);
+
+% Smooth envelop using code from 
+% https://se.mathworks.com/matlabcentral/fileexchange/43182-gaussian-smoothing-filter?focused=3839183&tab=function 
+smoothed_envelop = gaussfilt_2017(time,lfp_envelop,.004);
+moving_mean = movmean(smoothed_envelop, 5000);
+moving_std = movstd(smoothed_envelop, 5000);
+    
+    
+upper_thresh = moving_mean + U_threshold*moving_std;
+    
+findpeaks(smoothed_envelop-upper_thresh,fs,'MinPeakHeight',0,'MinPeakDistance',0.025,'MinPeakWidth',0.015,'WidthReference','halfhprom','Annotate','extents','WidthReference','halfprom');
+locs = round(locs,3);
 %     
 %       
 %     

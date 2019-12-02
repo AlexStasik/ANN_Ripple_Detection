@@ -10,7 +10,7 @@ from ripple_detection.simulate import simulate_time
 import scipy.stats
 
 
-SAMPLING_FREQUENCY = 1000
+SAMPLING_FREQUENCY = 2500
 n_samples = SAMPLING_FREQUENCY * 500
 time = simulate_time(n_samples, SAMPLING_FREQUENCY)
 white_noise = np.random.normal(size=time.shape)
@@ -24,7 +24,7 @@ ripple_loc = np.random.uniform(np.min(time), np.max(time), 1000)
 
 from ripple_detection.simulate import simulate_LFP
 
-LFPs = simulate_LFP(time, ripple_loc, noise_amplitude=3., ripple_amplitude=1.5)[:, np.newaxis]
+LFPs = simulate_LFP(time, ripple_loc, noise_amplitude=5., ripple_amplitude=1.5)[:, np.newaxis]
 speed = np.ones_like(time)
 
 
